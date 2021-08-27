@@ -25,7 +25,7 @@ bar = progressbar.ProgressBar(maxval=len(all_images), \
     widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
 bar.start()
 
-def worker(item, i):
+def worker(item, size, i):
   file_path = f'./build/{RUN_NAME}/images/{item["tokenId"]}.png'
 
   if os.path.exists(file_path):
@@ -33,10 +33,15 @@ def worker(item, i):
     return
 
   nft = Image.open('./traits/base.png')
+  nft = nft.resize((size,size))
 
   for layer in data['layers']:
-    img = Image.open(f'./traits/{layer}/{item[layer]}.png')
-    nft.paste(img, (0,0), img)
+    img_path = f'./traits/{layer}/{item[layer]}.png'
+
+    if os.path.exists(img_path):
+      img = Image.open(img_path)
+      img = img.resize((size,size))
+      nft.paste(img, (0,0), img)
 
   nft.save(file_path)
 
@@ -48,7 +53,7 @@ i = 0
 #### Generate Images    
 for item in all_images:
   i = i + 1
-  pool.apply_async(worker, (item,i,))
+  pool.apply_async(worker, (item,data['outputSize'],i,))
 
 pool.close()
 pool.join()

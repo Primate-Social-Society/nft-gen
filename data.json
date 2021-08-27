@@ -4,6 +4,7 @@
   "projectName": "Primate Social Society",
   "numToGenerate": 100,
   "defaultWeight": 10,
+  "outputSize": 1024,
   "layers": [
     "Background",
     "SkinColor",
