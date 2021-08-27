@@ -1,0 +1,14 @@
+{
+  "numToGenerate": 100,
+  "defaultWeight": 10,
+  "layers": [
+    "Background",
+    "SkinColor",
+    "HairColor",
+    "Frame",
+    "Mouth",
+    "Eyes",
+    "Ears"
+  ],
+  "exempt": ["alpaca", "space"]
+}
