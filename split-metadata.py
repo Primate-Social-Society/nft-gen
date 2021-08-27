@@ -1,18 +1,18 @@
 import os
 import json
 
-RUN_NAME = "1"
+f = open('./data.json',) 
+data = json.load(f)
+
+RUN_NAME = data['runName']
 
 try:
   os.makedirs(f'./build/{RUN_NAME}/metadata')
 except: 
   print('RUN_NAME metadata directory already exists')
 
-f = open('./data.json',) 
-data = json.load(f)
-
-IMAGES_BASE_URI = "ADD_IMAGES_BASE_URI_HERE"
-PROJECT_NAME = "Primate Social Society"
+IMAGES_BASE_URI = data['baseUrl']
+PROJECT_NAME = data['projectName']
 
 #### Generate Metadata for each Image    
 f = open(f'./build/{RUN_NAME}/all-traits.json',) 

@@ -3,15 +3,16 @@ from PIL import Image
 import random
 import json
 
-RUN_NAME = "1"
+f = open('./data.json',) 
+data = json.load(f)
+
+RUN_NAME = data['runName']
 
 try:
   os.makedirs(f'./build/{RUN_NAME}')
 except: 
   print('RUN_NAME build directory already exists')
 
-f = open('./data.json',) 
-data = json.load(f)
 
 if 'weights' not in data:
   data['weights'] = {}
@@ -27,7 +28,14 @@ for layer in data['layers']:
   runData[layer] = []
   
   for imagefile in os.listdir(f'./traits/{layer}'):
-    runData[layer].append(os.path.splitext(imagefile)[0])
+    imageName = os.path.splitext(imagefile)[0]
+
+    if imageName in data['exempt']:
+      continue
+
+    runData[layer].append(imageName)
+
+print(runData)
       
 # A recursive function to generate unique image combinations
 def create_new_image():

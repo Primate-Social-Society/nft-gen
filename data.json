@@ -1,4 +1,7 @@
 {
+  "runName": "2",
+  "baseUrl": "ADD_IMAGES_BASE_URI_HERE",
+  "projectName": "Primate Social Society",
   "numToGenerate": 100,
   "defaultWeight": 10,
   "layers": [

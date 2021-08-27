@@ -7,15 +7,16 @@ import json
 from multiprocessing import Pool
 
 pool_size = 10  # your "parallelness"
-RUN_NAME = "1"
+
+f = open('./data.json',) 
+data = json.load(f)
+
+RUN_NAME = data['runName']
 
 try:
   os.makedirs(f'./build/{RUN_NAME}/images')
 except: 
   print('RUN_NAME images directory already exists')
-
-f = open('./data.json',) 
-data = json.load(f)
 
 f = open(f'./build/{RUN_NAME}/all-traits.json',) 
 all_images = json.load(f)
