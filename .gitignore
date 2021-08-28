@@ -5,6 +5,11 @@
 nohup.out
 __pycache__
 
+weights.xlsx
+
+backups/*
+!backups/.keep
+
 build/*
 !build/.keep
 

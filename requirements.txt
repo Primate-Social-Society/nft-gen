@@ -2,3 +2,4 @@ progressbar
 pillow
 pandas
 XlsxWriter
+openpyxl

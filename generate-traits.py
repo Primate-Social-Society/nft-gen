@@ -14,16 +14,22 @@ try:
 except: 
   print('RUN_NAME build directory already exists')
 
-if 'weights' not in data:
-  data['weights'] = {}
+prevWeights = {}
+
+for layer in data['layers']:
+  try:
+    prevWeights[layer] = pd.read_excel('./weights.xlsx', sheet_name=layer, index_col= 0, engine='openpyxl').to_dict()
+  except:
+    traceback.print_exc()
+    prevWeights[layer] = {}
+  
+  if 'Weights' not in prevWeights[layer]:
+    prevWeights[layer]['Weights'] = {}
 
 # Load run specific data
 runData = {}
 
 for layer in data['layers']:
-  if layer not in data['weights']:
-    data['weights'][layer] = {}
-
   runData[layer] = {
     'images': [],
     'counts': {
@@ -33,6 +39,8 @@ for layer in data['layers']:
       'Total': 1.0
     }
   }
+
+  runData[layer]['weights'] = prevWeights[layer]['Weights']
   
   for imagefile in os.listdir(f'./traits/{layer}'):
     imageName = os.path.splitext(imagefile)[0]
@@ -55,10 +63,13 @@ def create_new_image():
     weights = []
 
     for image in runData[layer]['images']:
-      if image in data['weights'][layer]:
-        weights.append(float(data['weights'][layer][image]))
+      if image in runData[layer]['weights']:
+        weights.append(float(runData[layer]['weights'][image]))
       else:
+        runData[layer]['weights'][image] = data['defaultWeight']
         weights.append(float(data['defaultWeight']))
+
+    runData[layer]['weights']['Total'] = sum(weights)
 
     new_image [layer] = random.choices(runData[layer]['images'], weights)[0]
   
@@ -94,6 +105,7 @@ writer = pd.ExcelWriter(f'./build/{RUN_NAME}/stats.xlsx', engine='xlsxwriter')
 
 countFormat = writer.book.add_format({'num_format': '#,##0'})
 percentFormat = writer.book.add_format({'num_format': '0%'})
+weightFormat = writer.book.add_format({'num_format': '#,##0.00'})
 
 sheet = writer.book.add_worksheet('Stats')
 writer.sheets['Stats'] = sheet
@@ -101,12 +113,13 @@ writer.sheets['Stats'] = sheet
 sheet.set_column('A:A', 20, None)
 sheet.set_column('B:B', 10, countFormat)
 sheet.set_column('C:C', 10, percentFormat)
+sheet.set_column('D:D', 10, weightFormat)
 
 rows = 1
 
 for layer in data['layers']:
   sheet.write(f'A{rows}', layer)
-  df = pd.DataFrame({ 'Counts': runData[layer]['counts'], 'Percents': runData[layer]['percents']})
+  df = pd.DataFrame({ 'Counts': runData[layer]['counts'], 'Percents': runData[layer]['percents'], 'Weights': runData[layer]['weights'] })
   df.to_excel(writer, sheet_name='Stats', startrow=rows, startcol=0)
   rows += len(runData[layer]['counts']) + 3
   
