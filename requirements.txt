@@ -1,3 +1,4 @@
 progressbar
 pillow
-display
+pandas
+XlsxWriter

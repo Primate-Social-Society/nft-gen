@@ -2,6 +2,7 @@ import os
 from PIL import Image 
 import random
 import json
+import pandas as pd
 
 f = open('./data.json',) 
 data = json.load(f)
@@ -13,19 +14,25 @@ try:
 except: 
   print('RUN_NAME build directory already exists')
 
-
 if 'weights' not in data:
   data['weights'] = {}
 
+# Load run specific data
 runData = {}
-
-all_images = [] 
 
 for layer in data['layers']:
   if layer not in data['weights']:
     data['weights'][layer] = {}
 
-  runData[layer] = []
+  runData[layer] = {
+    'images': [],
+    'counts': {
+      'Total': 0
+    },
+    'percents': {
+      'Total': 1.0
+    }
+  }
   
   for imagefile in os.listdir(f'./traits/{layer}'):
     imageName = os.path.splitext(imagefile)[0]
@@ -33,10 +40,9 @@ for layer in data['layers']:
     if imageName in data['exempt']:
       continue
 
-    runData[layer].append(imageName)
+    runData[layer]['images'].append(imageName)
+    runData[layer]['counts'][imageName] = 0
 
-print(runData)
-      
 # A recursive function to generate unique image combinations
 def create_new_image():
   new_image = {} #
@@ -48,58 +54,63 @@ def create_new_image():
 
     weights = []
 
-    for image in runData[layer]:
+    for image in runData[layer]['images']:
       if image in data['weights'][layer]:
         weights.append(float(data['weights'][layer][image]))
       else:
         weights.append(float(data['defaultWeight']))
 
-    new_image [layer] = random.choices(runData[layer], weights)[0]
+    new_image [layer] = random.choices(runData[layer]['images'], weights)[0]
   
   if new_image in all_images:
     return create_new_image()
   else:
     return new_image
     
+all_images = [] 
+
 # Generate the unique combinations based on trait weightings
 for i in range(data['numToGenerate']): 
   new_image = create_new_image()
+  new_image['tokenId'] = i
   all_images.append(new_image)
 
-# Returns true if all images are unique
-def all_images_unique(all_images):
-  seen = list()
-  return not any(i in seen or seen.append(i) for i in all_images)
+#### Generate Stats for all Traits 
+for image in all_images:
+  for layer in data['layers']:
+    runData[layer]['counts'][image[layer]] += 1
+    runData[layer]['counts']['Total'] += 1
 
-print("Are all images unique?", all_images_unique(all_images))
-
-# Add token Id to each image
-i = 0
-for item in all_images:
-  item["tokenId"] = i
-  i = i + 1
-
-# # Get Trait Counts
-# background_count = {}
-# for item in background:
-#   background_count[item] = 0
+for layer in data['layers']:
+  total =  runData[layer]['counts']['Total']
+  for image in runData[layer]['counts']:
+    if image != 'Total':
+      runData[layer]['percents'][image] = runData[layer]['counts'][image] / total
     
-# circle_count = {}
-# for item in circle:
-#   circle_count[item] = 0
+with open(f'./build/{RUN_NAME}/stats.json', 'w') as outfile:
+  json.dump(runData, outfile, indent=4)
 
-# square_count = {}
-# for item in square:
-#   square_count[item] = 0
+writer = pd.ExcelWriter(f'./build/{RUN_NAME}/stats.xlsx', engine='xlsxwriter')
 
-# for image in all_images:
-#   background_count[image["Background"]] += 1
-#   circle_count[image["Circle"]] += 1
-#   square_count[image["Square"]] += 1
-    
-# print(background_count)
-# print(circle_count)
-# print(square_count)
+countFormat = writer.book.add_format({'num_format': '#,##0'})
+percentFormat = writer.book.add_format({'num_format': '0%'})
+
+sheet = writer.book.add_worksheet('Stats')
+writer.sheets['Stats'] = sheet
+
+sheet.set_column('A:A', 20, None)
+sheet.set_column('B:B', 10, countFormat)
+sheet.set_column('C:C', 10, percentFormat)
+
+rows = 1
+
+for layer in data['layers']:
+  sheet.write(f'A{rows}', layer)
+  df = pd.DataFrame({ 'Counts': runData[layer]['counts'], 'Percents': runData[layer]['percents']})
+  df.to_excel(writer, sheet_name='Stats', startrow=rows, startcol=0)
+  rows += len(runData[layer]['counts']) + 3
+  
+writer.save()
 
 #### Generate Metadata for all Traits 
 with open(f'./build/{RUN_NAME}/all-traits.json', 'w') as outfile:
