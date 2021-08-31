@@ -1,130 +1,132 @@
 import os
-from PIL import Image 
+from PIL import Image
 import random
 import json
 import pandas as pd
 
-f = open('./data.json',) 
+f = open(
+    "./data.json",
+)
 data = json.load(f)
 
-RUN_NAME = data['runName']
+RUN_NAME = data["runName"]
 
 try:
-  os.makedirs(f'./build/{RUN_NAME}')
-except: 
-  print('RUN_NAME build directory already exists')
+    os.makedirs(f"./build/{RUN_NAME}")
+except:
+    print("RUN_NAME build directory already exists")
 
 prevWeights = {}
 
-for layer in data['layers']:
-  try:
-    prevWeights[layer] = pd.read_excel('./weights.xlsx', sheet_name=layer, index_col= 0, engine='openpyxl').to_dict()
-  except:
-    traceback.print_exc()
-    prevWeights[layer] = {}
-  
-  if 'Weights' not in prevWeights[layer]:
-    prevWeights[layer]['Weights'] = {}
+for layer in data["layers"]:
+    try:
+        prevWeights[layer] = pd.read_excel(
+            "./weights.xlsx", sheet_name=layer, index_col=0, engine="openpyxl"
+        ).to_dict()
+    except:
+        prevWeights[layer] = {}
+
+    if "Weights" not in prevWeights[layer]:
+        prevWeights[layer]["Weights"] = {}
 
 # Load run specific data
 runData = {}
 
-for layer in data['layers']:
-  runData[layer] = {
-    'images': [],
-    'counts': {
-      'Total': 0
-    },
-    'percents': {
-      'Total': 1.0
-    }
-  }
+for layer in data["layers"]:
+    runData[layer] = {"images": [], "counts": {"Total": 0}, "percents": {"Total": 1.0}}
 
-  runData[layer]['weights'] = prevWeights[layer]['Weights']
-  
-  for imagefile in os.listdir(f'./traits/{layer}'):
-    imageName = os.path.splitext(imagefile)[0]
+    runData[layer]["weights"] = prevWeights[layer]["Weights"]
 
-    if imageName in data['exempt']:
-      continue
+    for imagefile in os.listdir(f"./traits/{layer}"):
+        imageName = os.path.splitext(imagefile)[0]
 
-    runData[layer]['images'].append(imageName)
-    runData[layer]['counts'][imageName] = 0
+        if imageName in data["exempt"]:
+            continue
+
+        runData[layer]["images"].append(imageName)
+        runData[layer]["counts"][imageName] = 0
 
 # A recursive function to generate unique image combinations
 def create_new_image():
-  new_image = {} #
+    new_image = {}  #
 
-  # For each trait category, select a random trait based on the weightings 
-  for layer in data['layers']:
-    if len(runData[layer]) == 0:
-      continue
+    # For each trait category, select a random trait based on the weightings
+    for layer in data["layers"]:
+        if len(runData[layer]) == 0:
+            continue
 
-    weights = []
+        weights = []
 
-    for image in runData[layer]['images']:
-      if image in runData[layer]['weights']:
-        weights.append(float(runData[layer]['weights'][image]))
-      else:
-        runData[layer]['weights'][image] = data['defaultWeight']
-        weights.append(float(data['defaultWeight']))
+        for image in runData[layer]["images"]:
+            if image in runData[layer]["weights"]:
+                weights.append(float(runData[layer]["weights"][image]))
+            else:
+                runData[layer]["weights"][image] = data["defaultWeight"]
+                weights.append(float(data["defaultWeight"]))
 
-    runData[layer]['weights']['Total'] = sum(weights)
+        runData[layer]["weights"]["Total"] = sum(weights)
 
-    new_image [layer] = random.choices(runData[layer]['images'], weights)[0]
-  
-  if new_image in all_images:
-    return create_new_image()
-  else:
-    return new_image
-    
-all_images = [] 
+        new_image[layer] = random.choices(runData[layer]["images"], weights)[0]
+
+    if new_image in all_images:
+        return create_new_image()
+    else:
+        return new_image
+
+
+all_images = []
 
 # Generate the unique combinations based on trait weightings
-for i in range(data['numToGenerate']): 
-  new_image = create_new_image()
-  new_image['tokenId'] = i
-  all_images.append(new_image)
+for i in range(data["numToGenerate"]):
+    new_image = create_new_image()
+    new_image["tokenId"] = i
+    all_images.append(new_image)
 
-#### Generate Stats for all Traits 
+#### Generate Stats for all Traits
 for image in all_images:
-  for layer in data['layers']:
-    runData[layer]['counts'][image[layer]] += 1
-    runData[layer]['counts']['Total'] += 1
+    for layer in data["layers"]:
+        runData[layer]["counts"][image[layer]] += 1
+        runData[layer]["counts"]["Total"] += 1
 
-for layer in data['layers']:
-  total =  runData[layer]['counts']['Total']
-  for image in runData[layer]['counts']:
-    if image != 'Total':
-      runData[layer]['percents'][image] = runData[layer]['counts'][image] / total
-    
-with open(f'./build/{RUN_NAME}/stats.json', 'w') as outfile:
-  json.dump(runData, outfile, indent=4)
+for layer in data["layers"]:
+    total = runData[layer]["counts"]["Total"]
+    for image in runData[layer]["counts"]:
+        if image != "Total":
+            runData[layer]["percents"][image] = runData[layer]["counts"][image] / total
 
-writer = pd.ExcelWriter(f'./build/{RUN_NAME}/stats.xlsx', engine='xlsxwriter')
+with open(f"./build/{RUN_NAME}/stats.json", "w") as outfile:
+    json.dump(runData, outfile, indent=4)
 
-countFormat = writer.book.add_format({'num_format': '#,##0'})
-percentFormat = writer.book.add_format({'num_format': '0%'})
-weightFormat = writer.book.add_format({'num_format': '#,##0.00'})
+writer = pd.ExcelWriter(f"./build/{RUN_NAME}/stats.xlsx", engine="xlsxwriter")
 
-sheet = writer.book.add_worksheet('Stats')
-writer.sheets['Stats'] = sheet
+countFormat = writer.book.add_format({"num_format": "#,##0"})
+percentFormat = writer.book.add_format({"num_format": "0%"})
+weightFormat = writer.book.add_format({"num_format": "#,##0.00"})
 
-sheet.set_column('A:A', 20, None)
-sheet.set_column('B:B', 10, countFormat)
-sheet.set_column('C:C', 10, percentFormat)
-sheet.set_column('D:D', 10, weightFormat)
+sheet = writer.book.add_worksheet("Stats")
+writer.sheets["Stats"] = sheet
+
+sheet.set_column("A:A", 20, None)
+sheet.set_column("B:B", 10, countFormat)
+sheet.set_column("C:C", 10, percentFormat)
+sheet.set_column("D:D", 10, weightFormat)
 
 rows = 1
 
-for layer in data['layers']:
-  sheet.write(f'A{rows}', layer)
-  df = pd.DataFrame({ 'Counts': runData[layer]['counts'], 'Percents': runData[layer]['percents'], 'Weights': runData[layer]['weights'] })
-  df.to_excel(writer, sheet_name='Stats', startrow=rows, startcol=0)
-  rows += len(runData[layer]['counts']) + 3
-  
+for layer in data["layers"]:
+    sheet.write(f"A{rows}", layer)
+    df = pd.DataFrame(
+        {
+            "Counts": runData[layer]["counts"],
+            "Percents": runData[layer]["percents"],
+            "Weights": runData[layer]["weights"],
+        }
+    )
+    df.to_excel(writer, sheet_name="Stats", startrow=rows, startcol=0)
+    rows += len(runData[layer]["counts"]) + 3
+
 writer.save()
 
-#### Generate Metadata for all Traits 
-with open(f'./build/{RUN_NAME}/all-traits.json', 'w') as outfile:
-  json.dump(all_images, outfile, indent=4)
+#### Generate Metadata for all Traits
+with open(f"./build/{RUN_NAME}/all-traits.json", "w") as outfile:
+    json.dump(all_images, outfile, indent=4)
