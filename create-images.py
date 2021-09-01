@@ -4,8 +4,8 @@ from PIL import Image
 import random
 import json
 
-# from multiprocessing.pool import ThreadPool as Pool
-from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool as Pool
+# from multiprocessing import Pool
 
 pool_size = 10  # your "parallelness"
 
