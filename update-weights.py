@@ -11,6 +11,9 @@ f = open(
 )
 data = json.load(f)
 
+if "fileTypes" not in data:
+    data["fileTypes"] = [".png"]
+
 backupTime = time.strftime("%Y%m%d-%H%M%S")
 
 prevWeights = {}
@@ -44,8 +47,9 @@ try:
         weights = {}
         for imagefile in os.listdir(f"./traits/{layer}"):
             imageName = os.path.splitext(imagefile)[0]
+            fileType = os.path.splitext(imagefile)[1]
 
-            if imageName in data["exempt"]:
+            if fileType not in data["fileTypes"] or imageName in data["exempt"]:
                 continue
 
             if imageName in prevWeights[layer]["Weights"]:

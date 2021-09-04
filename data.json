@@ -14,5 +14,6 @@
     "Eyes",
     "Ears"
   ],
+  "fileTypes": [".png"],
   "exempt": ["alpaca", "space"]
 }

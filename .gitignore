@@ -13,7 +13,7 @@ backups/*
 build/*
 !build/.keep
 
-traits/*/*.png
+traits/*/*
 !traits/Background/SpaceSky.png
 !traits/Ears/BaldHead+Ears.png
 !traits/Eyes/Closed_Eyes.png

@@ -9,6 +9,9 @@ f = open(
 )
 data = json.load(f)
 
+if "fileTypes" not in data:
+    data["fileTypes"] = [".png"]
+
 RUN_NAME = data["runName"]
 
 try:
@@ -39,8 +42,9 @@ for layer in data["layers"]:
 
     for imagefile in os.listdir(f"./traits/{layer}"):
         imageName = os.path.splitext(imagefile)[0]
+        fileType = os.path.splitext(imagefile)[1]
 
-        if imageName in data["exempt"]:
+        if fileType not in data["fileTypes"] or imageName in data["exempt"]:
             continue
 
         runData[layer]["images"].append(imageName)
