@@ -4,6 +4,8 @@ import random
 import json
 import pandas as pd
 
+from exceptions import should_exclude_image
+
 f = open(
     "./data.json",
 )
@@ -60,8 +62,13 @@ def create_new_image():
             continue
 
         weights = []
+        images = []
 
         for image in runData[layer]["images"]:
+            if should_exclude_image(data["exceptions"], new_image, layer, image):
+                continue
+
+            images.append(image)
             if image in runData[layer]["weights"]:
                 weights.append(float(runData[layer]["weights"][image]))
             else:
@@ -70,7 +77,7 @@ def create_new_image():
 
         runData[layer]["weights"]["Total"] = sum(weights)
 
-        new_image[layer] = random.choices(runData[layer]["images"], weights)[0]
+        new_image[layer] = random.choices(images, weights)[0]
 
     if new_image in all_images:
         return create_new_image()

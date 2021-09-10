@@ -15,5 +15,27 @@
     "Ears"
   ],
   "fileTypes": [".png"],
-  "exempt": ["alpaca", "space"]
+  "exempt": ["alpaca", "space"],
+  "exceptions": [
+    {
+      "type": "remove",
+      "criteria": {
+        "trait": "Mouth",
+        "type": "equals",
+        "compare": [
+          "kazoo",
+          "Knife_Mouth",
+          "banana_pipe",
+          "tobacco_pipe",
+          "bubble",
+          "cigar"
+        ]
+      },
+      "data": {
+        "trait": "Ears",
+        "type": "equals",
+        "compare": "Space_Chimp"
+      }
+    }
+  ]
 }
