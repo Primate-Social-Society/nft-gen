@@ -22,14 +22,20 @@
       "criteria": {
         "trait": "Mouth",
         "type": "equals",
-        "compare": [
-          "kazoo",
-          "Knife_Mouth",
-          "banana_pipe",
-          "tobacco_pipe",
-          "bubble",
-          "cigar"
-        ]
+        "compare": ["tobacco_pipe", "bubble", "cigar"]
+      },
+      "data": {
+        "trait": "Ears",
+        "type": "equals",
+        "compare": "Space_Chimp"
+      }
+    },
+    {
+      "type": "remove",
+      "criteria": {
+        "trait": "Mouth",
+        "type": "equals",
+        "compare": ["kazoo", "Knife_Mouth", "banana_pipe"]
       },
       "data": {
         "trait": "Ears",
