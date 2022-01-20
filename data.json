@@ -5,6 +5,7 @@
   "numToGenerate": 100,
   "defaultWeight": 10,
   "outputSize": 1024,
+  "convert": "",
   "layers": [
     "Background",
     "SkinColor",

@@ -47,7 +47,11 @@ def worker(item, size, i):
         img_path = f"./traits/{layer}/{item[layer]}.png"
 
         if os.path.exists(img_path):
-            img = Image.open(img_path).convert("RGBa")
+            img = Image.open(img_path)
+
+            if "convert" in data and data["convert"] != "":
+                img = img.convert(data["convert"])
+
             img = img.resize((size, size))
             nft.paste(img, (0, 0), img)
 
